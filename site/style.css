@@ -1,0 +1,79 @@
+:root {
+  --parchment: #f0e0bd;
+  --parchment-dark: #e2cd9c;
+  --ink: #2b1d0e;
+  --gold: #c9962c;
+  --wine: #7a1f2b;
+  --sea: #2b5a63;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.25), transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(122, 31, 43, 0.08), transparent 55%),
+    linear-gradient(160deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+  min-height: 100vh;
+}
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 3px double var(--gold);
+}
+.logo { height: 56px; width: auto; }
+.header-text h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--wine);
+  letter-spacing: 0.04em;
+}
+.entry-count { margin: 2px 0 0; font-size: 0.85rem; color: var(--ink); opacity: 0.7; }
+main { padding: 20px 24px 60px; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.entry-card {
+  position: relative;
+  background: rgba(255, 250, 235, 0.75);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 16px 16px 14px;
+  cursor: pointer;
+  box-shadow: 2px 3px 0 rgba(43, 29, 14, 0.12);
+  transition: transform 0.1s ease;
+}
+.entry-card:hover, .entry-card:focus-visible { transform: translateY(-2px); }
+.entry-card .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--wine);
+  color: var(--parchment);
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.entry-card h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.tag {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sea);
+  color: #fdf6e3;
+}
+.source { font-size: 0.72rem; opacity: 0.6; }
