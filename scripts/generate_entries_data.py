@@ -45,10 +45,15 @@ def inline(text: str) -> str:
     return text
 
 
-# 「* **ラベル:**」「* **ラベル**:」のように、箇条書きの先頭行だけが
-# 太字＋コロンで、後続の行がその詳細説明になっているグループを検出する。
-# コロンは太字の内側/外側どちらに書かれることもあるため両方許可する。
+# 「* **ラベル**」「* **ラベル:**」のように、行全体が太字だけで出来ている
+# 箇条書き項目。後続の項目がその詳細説明になっているグループ見出しにあたる。
+# コロンは付く場合と付かない場合があり、太字の内側/外側どちらにも書かれる。
 LIST_LABEL_RE = re.compile(r"^\*\*(.+?)\*\*[:：]?$")
+
+# 「* **ラベル**: 本文」「* **ラベル：** 本文」のように、太字のラベルと本文が
+# 1行に同居している箇条書き項目。345番までの原稿の「ラベル: 本文」と同じ形なので、
+# 見た目も同じ枠付きのラベル(term-item)に揃える。
+LIST_TERM_RE = re.compile(r"^\*\*([^*]{2,32}?)([:：])?\*\*([:：])?[ \t]*(.+)$")
 
 
 def list_label(raw_item: str) -> str:
@@ -59,11 +64,19 @@ def list_label(raw_item: str) -> str:
     m = LIST_LABEL_RE.match(raw_item.strip())
     if not m:
         return None
-    label = m.group(1)
-    has_colon = raw_item.rstrip().endswith((":", "：")) or label.endswith((":", "："))
-    if not has_colon:
+    return m.group(1).rstrip(":：")
+
+
+def list_term(raw_item: str) -> tuple:
+    """「**ラベル**: 本文」形式の箇条書き項目を (ラベル, 本文) に分解する。
+
+    その形でなければ None を返す。コロンが無いものは、ただ文頭が
+    強調されているだけの項目なので対象にしない。
+    """
+    m = LIST_TERM_RE.match(raw_item.strip())
+    if not m or not (m.group(2) or m.group(3)):
         return None
-    return label.rstrip(":：")
+    return m.group(1), m.group(4)
 
 
 def parse_table(lines: list) -> str:
@@ -160,15 +173,33 @@ def md_to_html(md: str) -> str:
     i = 0
     list_buf: list = []
 
+    def render_item(raw_item: str) -> str:
+        term = list_term(raw_item)
+        if term:
+            label, body = term
+            return f'<li class="term-item"><span class="term">{inline(label)}</span>{inline(body)}</li>'
+        return f"<li>{inline(raw_item)}</li>"
+
     def flush_list():
         if not list_buf:
             return
-        label = list_label(list_buf[0])
-        rest = list_buf[1:] if label is not None else list_buf
-        if label is not None:
-            out.append(f'<p class="list-label">{inline(label)}</p>')
-        if rest:
-            out.append("<ul>" + "".join(f"<li>{inline(x)}</li>" for x in rest) + "</ul>")
+        # 全体が太字の項目はグループ見出しなので、そこで箇条書きを区切る。
+        # 空行で区切られていない原稿でも見出しと詳細が入り混じらないようにする。
+        group: list = []
+
+        def flush_group():
+            if group:
+                out.append("<ul>" + "".join(render_item(x) for x in group) + "</ul>")
+                group.clear()
+
+        for item in list_buf:
+            label = list_label(item)
+            if label is not None:
+                flush_group()
+                out.append(f'<p class="list-label">{inline(label)}</p>')
+            else:
+                group.append(item)
+        flush_group()
         list_buf.clear()
 
     while i < len(lines):
@@ -182,7 +213,12 @@ def md_to_html(md: str) -> str:
 
         if stripped == "---":
             flush_list()
-            out.append("<hr>")
+            # 見出しの直前の区切り線は引かない。見出し自体が罫線や
+            # 丸数字バッジで十分に区切られているので、線が二重になって
+            # 間延びするだけになる（345番までの原稿には区切り線が無い）。
+            nxt = next((l.strip() for l in lines[i + 1:] if l.strip()), "")
+            if not re.match(r"^#{1,4}\s", nxt):
+                out.append("<hr>")
             i += 1
             continue
 

@@ -472,14 +472,17 @@ main { padding-top: 26px; padding-bottom: 72px; }
   white-space: nowrap;
 }
 
-.modal-content p.term-item {
+/* 「ラベル: 本文」の項目。345番までの原稿ではプレーンな段落(p)として、
+   それ以降の原稿では箇条書き項目(li)として書かれているが、
+   中身は同じものなので見た目も揃える */
+.modal-content .term-item {
   margin: 0 0 0.95em;
   padding: 10px 14px;
   background: rgba(201, 150, 44, 0.07);
   border-left: 3px solid rgba(201, 150, 44, 0.45);
   border-radius: 0 4px 4px 0;
 }
-.modal-content p.term-item .term {
+.modal-content .term-item .term {
   display: block;
   margin-bottom: 3px;
   font-family: var(--font-ui);
@@ -488,11 +491,16 @@ main { padding-top: 26px; padding-bottom: 72px; }
   letter-spacing: 0.03em;
   color: var(--gold-deep);
 }
+/* liの場合は黒丸を消し、段落版と同じ幅で並ぶように字下げを打ち消す */
+.modal-content li.term-item {
+  list-style: none;
+  margin-left: -1.3em;
+}
 
 .modal-content ul { margin: 0 0 1.15em; padding-left: 1.3em; }
 .modal-content li { margin-bottom: 0.4em; }
 
-/* 「**ラベル:**」で始まる箇条書きグループの見出し。
+/* 全体が太字で書かれた箇条書き項目＝そのグループの見出し。
    ラベルと詳細の同じ黒丸(・)が並ぶだけだと見分けがつかないため、
    ラベルだけ罫線付きの小さな帯にして視覚的に一段上げる */
 .modal-content p.list-label {

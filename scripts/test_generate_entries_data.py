@@ -87,13 +87,40 @@ def test_list_label_full_width_colon():
     assert ged.list_label("**ラベル：**") == "ラベル"
 
 
-def test_list_label_bold_without_colon_is_not_a_label():
-    # 太字だけでコロンが無い項目は、ただの強調された箇条書き項目であってラベルではない
-    assert ged.list_label("**重要な項目**") is None
+def test_list_label_without_colon_is_still_a_label():
+    """コロンの有無は書き手の気分で揺れるので、行全体が太字なら見出しとして扱う。
+
+    コロン付きだけを拾っていたとき、同じ記事の中でラベルが帯になったり
+    ただの箇条書きに見えたりして統一感が無くなる回帰があった。
+    """
+    assert ged.list_label("**イム様の正体は「神仏」ではなく「悪魔・鬼」**") == (
+        "イム様の正体は「神仏」ではなく「悪魔・鬼」"
+    )
 
 
 def test_list_label_plain_item_is_not_a_label():
     assert ged.list_label("ふつうの項目") is None
+
+
+def test_list_label_partially_bold_item_is_not_a_label():
+    # 行全体ではなく文中だけが太字の項目は、見出しではなく詳細項目
+    assert ged.list_label("**ドラム王国**: 最初に訪れた王国である。") is None
+
+
+def test_list_term_splits_label_and_body():
+    assert ged.list_term("**ドラム王国**: Dr.クレハが住む城がある。") == (
+        "ドラム王国",
+        "Dr.クレハが住む城がある。",
+    )
+
+
+def test_list_term_colon_inside_bold():
+    assert ged.list_term("**育ての親：** ガープとおつる。") == ("育ての親", "ガープとおつる。")
+
+
+def test_list_term_without_colon_is_not_a_term():
+    # 文頭が強調されているだけの項目をラベル扱いすると本文が分断される
+    assert ged.list_term("**ルフィ**は海賊王を目指している。") is None
 
 
 def test_md_to_html_list_with_label_becomes_label_and_ul():
@@ -105,6 +132,31 @@ def test_md_to_html_list_with_label_becomes_label_and_ul():
     )
 
 
+def test_md_to_html_splits_list_at_every_label():
+    """空行で区切られていない原稿でも、ラベルごとに箇条書きを割る。
+
+    実データに「ラベル→詳細→ラベル→詳細」が1つの箇条書きに詰まった
+    箇所があり、2つ目以降のラベルが詳細に埋もれていた。
+    """
+    md = "- **対立A**\n- 詳細A\n- **対立B**\n- 詳細B"
+    html = ged.md_to_html(md)
+    assert html == (
+        '<p class="list-label">対立A</p>\n'
+        "<ul><li>詳細A</li></ul>\n"
+        '<p class="list-label">対立B</p>\n'
+        "<ul><li>詳細B</li></ul>"
+    )
+
+
+def test_md_to_html_list_term_item_gets_term_styling():
+    """「**ラベル**: 本文」は345番までの「ラベル: 本文」と同じ枠付き表示に揃える。"""
+    html = ged.md_to_html("- **ドラム王国**: Dr.クレハが住む城がある。")
+    assert html == (
+        '<ul><li class="term-item"><span class="term">ドラム王国</span>'
+        "Dr.クレハが住む城がある。</li></ul>"
+    )
+
+
 def test_md_to_html_list_without_label_is_unaffected():
     html = ged.md_to_html("- 項目1\n- 項目2")
     assert html == "<ul><li>項目1</li><li>項目2</li></ul>"
@@ -113,6 +165,18 @@ def test_md_to_html_list_without_label_is_unaffected():
 def test_md_to_html_label_only_list_has_no_trailing_ul():
     html = ged.md_to_html("- **単独ラベル:**")
     assert html == '<p class="list-label">単独ラベル</p>'
+
+
+def test_md_to_html_rule_before_heading_is_dropped():
+    """見出しの直前の区切り線は線が二重になるので引かない。"""
+    html = ged.md_to_html("本文です。\n\n---\n\n### 1. 次の節")
+    assert "<hr>" not in html
+    assert '<h4 class="sec-num">' in html
+
+
+def test_md_to_html_rule_between_paragraphs_is_kept():
+    html = ged.md_to_html("前の段落です。\n\n---\n\n次の段落です。")
+    assert "<hr>" in html
 
 
 def test_md_to_html_numbered_h3_becomes_sec_num_heading():
