@@ -12,7 +12,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MD_GLOB = "ドロピザ考察*.md"
 TAGS_FILE = REPO_ROOT / "tags.json"
 OUT_FILE = REPO_ROOT / "site" / "data" / "entries-data.js"
-INDEX_FILE = REPO_ROOT / "site" / "index.html"
 
 
 def parse_heading(heading_text: str) -> tuple:
@@ -246,6 +245,8 @@ def update_meta_description(count: int, index_path: Path) -> bool:
 
     考察を追加するたびに手で直すと必ず食い違うので、生成時に同期する。
     """
+    if not index_path.exists():
+        return False
     html = index_path.read_text(encoding="utf-8")
     updated = re.sub(r"考察\d+本", f"考察{count}本", html, count=1)
     if updated == html:
@@ -259,8 +260,11 @@ def main():
     entries = build_entries(find_md_files(REPO_ROOT), tags_dict)
     write_entries_js(entries, OUT_FILE)
     print(f"generated {OUT_FILE} ({len(entries)} entries)")
-    if update_meta_description(len(entries), INDEX_FILE):
-        print(f"updated meta description in {INDEX_FILE}")
+    # REPO_ROOTから毎回導出する。テストがREPO_ROOTを差し替えたときに
+    # 実リポジトリのindex.htmlを書き換えてしまうのを防ぐため。
+    index_file = REPO_ROOT / "site" / "index.html"
+    if update_meta_description(len(entries), index_file):
+        print(f"updated meta description in {index_file}")
 
 
 if __name__ == "__main__":

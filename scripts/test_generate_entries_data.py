@@ -233,6 +233,55 @@ def test_main_handles_no_md_files():
         assert "window.ENTRIES = []" in content
 
 
+def test_main_updates_meta_description_count():
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        (d / "ドロピザ考察001-030.md").write_text(
+            "## 1. サンプルA\n本文です。\n\n## 2. サンプルB\n本文です。\n", encoding="utf-8"
+        )
+        tags_file = d / "tags.json"
+        tags_file.write_text("{}", encoding="utf-8")
+        out_file = d / "site" / "data" / "entries-data.js"
+        index_file = d / "site" / "index.html"
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        index_file.write_text(
+            '<meta name="description" content="考察999本を検索できる。">', encoding="utf-8"
+        )
+
+        original = (ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE)
+        ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE = d, tags_file, out_file
+        try:
+            ged.main()
+        finally:
+            ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE = original
+
+        assert "考察2本" in index_file.read_text(encoding="utf-8")
+
+
+def test_main_does_not_touch_the_real_index_html():
+    """main()はREPO_ROOT配下だけを書き換える。
+
+    INDEX_FILEをモジュール定数にしていたとき、REPO_ROOTだけ差し替えた
+    テストが実リポジトリのindex.htmlを「考察0本」に書き潰した回帰がある。
+    """
+    real_index = Path(__file__).resolve().parent.parent / "site" / "index.html"
+    before = real_index.read_text(encoding="utf-8")
+
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        tags_file = d / "tags.json"
+        tags_file.write_text("{}", encoding="utf-8")
+
+        original = (ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE)
+        ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE = d, tags_file, d / "out.js"
+        try:
+            ged.main()
+        finally:
+            ged.REPO_ROOT, ged.TAGS_FILE, ged.OUT_FILE = original
+
+    assert real_index.read_text(encoding="utf-8") == before
+
+
 def test_plain_block_numbered_line_becomes_section_heading():
     html = ged.plain_block_to_html("1. 最終章へのカウントダウンとワノ国後の展開")
     assert html == (
