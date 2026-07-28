@@ -80,6 +80,32 @@ def test_md_to_html_table():
     assert "<td>1</td>" in html
 
 
+def test_match_tags_single_match():
+    tags_dict = {"ルフィ/ニカ": ["ルフィ", "ニカ"], "黒ひげ海賊団": ["黒ひげ"]}
+    assert ged.match_tags("ルフィが食べた実の正体", tags_dict) == ["ルフィ/ニカ"]
+
+
+def test_match_tags_multiple_matches():
+    tags_dict = {"ルフィ/ニカ": ["ルフィ"], "黒ひげ海賊団": ["黒ひげ"]}
+    result = ged.match_tags("ルフィと黒ひげの因縁", tags_dict)
+    assert set(result) == {"ルフィ/ニカ", "黒ひげ海賊団"}
+
+
+def test_match_tags_no_match_returns_unclassified():
+    tags_dict = {"ルフィ/ニカ": ["ルフィ"]}
+    assert ged.match_tags("無関係な文章", tags_dict) == ["未分類"]
+
+
+def test_load_tags_missing_file_returns_empty_dict():
+    assert ged.load_tags(Path("/tmp/does_not_exist_tags_test.json")) == {}
+
+
+def test_load_tags_reads_real_file():
+    tags_dict = ged.load_tags(ged.TAGS_FILE)
+    assert "ルフィ/ニカ" in tags_dict
+    assert "ルフィ" in tags_dict["ルフィ/ニカ"]
+
+
 def run():
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]
     for t in tests:

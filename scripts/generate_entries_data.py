@@ -113,3 +113,14 @@ def md_to_html(md: str) -> str:
 
     flush_list()
     return "\n".join(out)
+
+
+def load_tags(tags_path: Path) -> dict:
+    if not tags_path.exists():
+        return {}
+    return json.loads(tags_path.read_text(encoding="utf-8"))
+
+
+def match_tags(text: str, tags_dict: dict) -> list:
+    matched = [name for name, keywords in tags_dict.items() if any(kw in text for kw in keywords)]
+    return matched if matched else ["未分類"]
