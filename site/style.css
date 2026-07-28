@@ -460,6 +460,17 @@ main { padding-top: 26px; padding-bottom: 72px; }
   line-height: 1.5;
 }
 
+/* 動画内の再生位置。本文の可読性を邪魔しないよう小さく淡く添える */
+.modal-content .ts {
+  margin-left: 0.5em;
+  font-family: var(--font-ui);
+  font-size: 0.72em;
+  font-weight: 400;
+  font-feature-settings: "tnum";
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
 .modal-content p.term-item {
   margin: 0 0 0.95em;
   padding: 10px 14px;
@@ -506,9 +517,13 @@ main { padding-top: 26px; padding-bottom: 72px; }
     max-width: none;
     /* 親の .modal は position:fixed なので、max-height を外すと本文が
        ビューポートからはみ出してスクロールできなくなる。画面いっぱいの
-       高さに固定し、スクロールは .modal-body 自身に持たせる。 */
+       高さに固定し、スクロールは .modal-body 自身に持たせる。
+       iOS Safariの100vhはアドレスバーを含む大きい方の高さなので、
+       対応ブラウザでは実際の表示領域を指す100dvhで上書きする。 */
     min-height: 100vh;
     max-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100dvh;
     border: none;
     border-radius: 0;
     padding: 22px 20px 56px;

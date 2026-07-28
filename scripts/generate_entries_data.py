@@ -61,6 +61,27 @@ def parse_table(lines: list) -> str:
     return "".join(out)
 
 
+# 「[00:13]」「[01:23:27]」のような動画内の再生位置
+TIMESTAMP_RE = re.compile(r"\[\d{1,2}:\d{2}(?::\d{2})?\]")
+TRAILING_TIMESTAMP_RE = re.compile(r"\s*(\[\d{1,2}:\d{2}(?::\d{2})?\])\s*$")
+# タイムスタンプ内のコロンを一時的に置き換える文字。本文には現れない制御文字を使う
+TS_COLON_MASK = "\x00"
+
+
+def mask_timestamp_colons(text: str) -> str:
+    """タイムスタンプ内のコロンを隠す。
+
+    「ラベル: 本文」の判定に使う正規表現が、[00:13]のコロンを
+    区切りとして拾ってしまうのを防ぐ。文字数は変えないので、
+    見出し判定の長さチェックにも影響しない。
+    """
+    return TIMESTAMP_RE.sub(lambda m: m.group(0).replace(":", TS_COLON_MASK), text)
+
+
+def unmask_timestamp_colons(text: str) -> str:
+    return text.replace(TS_COLON_MASK, ":")
+
+
 def plain_block_to_html(stripped: str) -> str:
     """Markdown記法を持たない1行を、内容から構造を推定してHTML化する。
 
@@ -70,26 +91,46 @@ def plain_block_to_html(stripped: str) -> str:
     全てが同じ見た目の段落になり読みづらいため、
     ここで見出し・ラベル付き項目を判別して意味的なタグを付ける。
     """
+    # 行末のタイムスタンプは見出し判定の邪魔になるので一度切り離し、最後に付け直す
+    m_ts = TRAILING_TIMESTAMP_RE.search(stripped)
+    timestamp = ""
+    if m_ts:
+        timestamp = f'<span class="ts">{m_ts.group(1)}</span>'
+        stripped = stripped[: m_ts.start()]
+        if not stripped:
+            # 行がタイムスタンプだけだった場合。見出しにはしない
+            return f"<p>{timestamp}</p>"
+
+    masked = mask_timestamp_colons(stripped)
+
+    def emit(text: str) -> str:
+        return inline(unmask_timestamp_colons(text))
+
     # 「1. 最終章へのカウントダウン」のような番号付き見出し
-    m = re.match(r"^(\d+)[.．]\s*(.+)$", stripped)
-    if m and "。" not in stripped and len(stripped) < 60:
-        return f'<h4 class="sec-num"><span class="num">{inline(m.group(1))}</span>{inline(m.group(2))}</h4>'
+    m = re.match(r"^(\d+)[.．]\s*(.+)$", masked)
+    if m and "。" not in masked and len(masked) < 60:
+        return f'<h4 class="sec-num"><span class="num">{emit(m.group(1))}</span>{emit(m.group(2))}{timestamp}</h4>'
 
     # 「名前の由来:」のように行末がコロンで終わる小見出し
-    m = re.match(r"^([^:：]{2,30})[:：]$", stripped)
+    m = re.match(r"^([^:：]{2,30})[:：]$", masked)
     if m:
-        return f'<h4 class="sec-sub">{inline(m.group(1))}</h4>'
+        return f'<h4 class="sec-sub">{emit(m.group(1))}{timestamp}</h4>'
 
     # 「物語の終焉に向けたペース: 尾田先生は〜」のようなラベル付き項目
-    m = re.match(r"^([^:：]{2,30})[:：]\s*(.+)$", stripped)
+    m = re.match(r"^([^:：]{2,30})[:：]\s*(.+)$", masked)
     if m and not m.group(2).startswith("//"):
-        return f'<p class="term-item"><span class="term">{inline(m.group(1))}</span>{inline(m.group(2))}</p>'
+        return f'<p class="term-item"><span class="term">{emit(m.group(1))}</span>{emit(m.group(2))}{timestamp}</p>'
+
+    # 「CP9の動物モチーフとカリファの例外性 [00:00]」のように、
+    # 再生位置を伴う短い行は本文ではなく動画内の小見出し
+    if timestamp and "。" not in masked:
+        return f'<h4 class="sec-sub">{emit(masked)}{timestamp}</h4>'
 
     # 「概要」「この動画が伝えたかったこと」のような独立したセクション見出し
-    if len(stripped) <= 24 and "。" not in stripped and "、" not in stripped:
-        return f'<h3 class="sec">{inline(stripped)}</h3>'
+    if len(masked) <= 24 and "。" not in masked and "、" not in masked:
+        return f'<h3 class="sec">{emit(masked)}</h3>'
 
-    return f"<p>{inline(stripped)}</p>"
+    return f"<p>{emit(masked)}{timestamp}</p>"
 
 
 def md_to_html(md: str) -> str:

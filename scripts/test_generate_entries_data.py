@@ -292,6 +292,61 @@ def test_md_to_html_applies_plain_block_structure():
     assert '<h4 class="sec-num">' in html
 
 
+def test_plain_block_trailing_timestamp_becomes_subheading():
+    # 実データで373行が「ラベル: 本文」と誤判定されていた形
+    html = ged.plain_block_to_html("CP9の動物モチーフとカリファの例外性 [00:00]")
+    assert html == '<h4 class="sec-sub">CP9の動物モチーフとカリファの例外性<span class="ts">[00:00]</span></h4>'
+
+
+def test_plain_block_hour_length_timestamp_is_supported():
+    html = ged.plain_block_to_html("保守派（盾）とリベラル派（剣） [01:21:24]")
+    assert html == '<h4 class="sec-sub">保守派（盾）とリベラル派（剣）<span class="ts">[01:21:24]</span></h4>'
+
+
+def test_plain_block_timestamp_colon_is_not_a_label_separator():
+    # タイムスタンプが行頭近くにあっても区切りとして拾わない
+    html = ged.plain_block_to_html("[00:13] が示すのは、物語の折り返し地点である。")
+    assert 'class="term"' not in html
+    assert "[00:13]" in html
+
+
+def test_plain_block_sentence_with_trailing_timestamp_stays_paragraph():
+    line = "くまは「暴君」と恐れられていたが、実際は誰よりも人々を救った聖者であった。 [00:30]"
+    html = ged.plain_block_to_html(line)
+    assert html.startswith("<p>")
+    assert '<span class="ts">[00:30]</span></p>' in html
+
+
+def test_plain_block_label_keeps_its_trailing_timestamp():
+    html = ged.plain_block_to_html("祖父：ピンゾロ [06:07]")
+    assert '<span class="term">祖父</span>ピンゾロ' in html
+    assert '<span class="ts">[06:07]</span>' in html
+
+
+def test_plain_block_timestamp_only_line_stays_paragraph():
+    html = ged.plain_block_to_html("[02:30]")
+    assert html == '<p><span class="ts">[02:30]</span></p>'
+
+
+def test_mask_timestamp_colons_preserves_length():
+    text = "見出し [01:21:24] の続き"
+    assert len(ged.mask_timestamp_colons(text)) == len(text)
+    assert ged.unmask_timestamp_colons(ged.mask_timestamp_colons(text)) == text
+
+
+def test_no_entry_splits_a_timestamp_across_label_and_body():
+    """実データ全件で、タイムスタンプがラベルと本文に分断されていないこと。
+
+    373行が壊れていた回帰なので、個別ケースではなくコーパス全体で検証する。
+    """
+    import re
+
+    for path in ged.find_md_files(ged.REPO_ROOT):
+        html = ged.md_to_html(path.read_text(encoding="utf-8"))
+        # 「…[00</span>」のようにラベル末尾がタイムスタンプ途中で切れていないか
+        assert not re.search(r"\[\d{1,2}</span>", html), path.name
+
+
 def run():
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]
     for t in tests:
