@@ -155,7 +155,7 @@ def build_entries(file_paths: list, tags_dict: dict) -> list:
                 "id": make_entry_id(file_path.stem, idx),
                 "number": number,
                 "title": title,
-                "sourceFile": file_path.name,
+                "sourceFile": unicodedata.normalize("NFC", file_path.name),
                 "tags": match_tags(f"{heading}\n{body}", tags_dict),
                 "html": md_to_html(body),
             })

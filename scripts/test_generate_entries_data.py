@@ -2,6 +2,7 @@
 import json
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -115,6 +116,42 @@ def test_find_md_files_sorted_by_name():
         (d / "ドロピザ考察001-030.md").write_text("", encoding="utf-8")
         files = ged.find_md_files(d)
         assert [f.name for f in files] == ["ドロピザ考察001-030.md", "ドロピザ考察031-060.md"]
+
+
+def test_find_md_files_detects_nfd_filenames():
+    # macOS上のファイルシステムはファイル名をNFD（濁点等が分解された形）で
+    # 保持することがある。ここでは実際にNFD形式のファイル名でファイルを
+    # 作成し、find_md_filesがNFC/NFDどちらの表記でもマッチできることを
+    # 検証する（実データで119/214件しか検出できなかった回帰を防ぐテスト）。
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        nfc_name = unicodedata.normalize("NFC", "ドロピザ考察001-030.md")
+        nfd_name = unicodedata.normalize("NFD", "ドロピザ考察031-060.md")
+        assert nfc_name != nfd_name  # 前提: 実際にバイト表現が異なること
+
+        (d / nfc_name).write_text("", encoding="utf-8")
+        (d / nfd_name).write_text("", encoding="utf-8")
+
+        files = ged.find_md_files(d)
+        normalized_names = [unicodedata.normalize("NFC", f.name) for f in files]
+        assert normalized_names == [
+            "ドロピザ考察001-030.md",
+            "ドロピザ考察031-060.md",
+        ]
+
+
+def test_build_entries_normalizes_source_file_to_nfc():
+    # build_entriesが格納するsourceFileも、find_md_filesが検出した元の
+    # ファイル名の正規化形式（NFC/NFD）に関わらずNFCに統一されることを検証する。
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        nfd_name = unicodedata.normalize("NFD", "ドロピザ考察031-060.md")
+        (d / nfd_name).write_text("## 1. サンプル\n本文です。\n", encoding="utf-8")
+
+        entries = ged.build_entries(ged.find_md_files(d), {})
+        assert len(entries) == 1
+        assert entries[0]["sourceFile"] == "ドロピザ考察031-060.md"
+        assert unicodedata.is_normalized("NFC", entries[0]["sourceFile"])
 
 
 def test_build_entries_basic():
