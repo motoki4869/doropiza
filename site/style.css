@@ -7,6 +7,7 @@
   --ink-faint: rgba(43, 29, 14, 0.38);
   --gold: #c9962c;
   --gold-deep: #a5761b;
+  --yellow-sub: #9c7209;
   --wine: #7a1f2b;
   --sea: #2b5a63;
   --rule: rgba(165, 118, 27, 0.35);
@@ -456,7 +457,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   margin: 1.6em 0 0.6em;
   font-size: 0.97rem;
   font-weight: 600;
-  color: var(--gold-deep);
+  color: var(--yellow-sub);
   line-height: 1.5;
 }
 
@@ -490,6 +491,23 @@ main { padding-top: 26px; padding-bottom: 72px; }
 
 .modal-content ul { margin: 0 0 1.15em; padding-left: 1.3em; }
 .modal-content li { margin-bottom: 0.4em; }
+
+/* 「**ラベル:**」で始まる箇条書きグループの見出し。
+   ラベルと詳細の同じ黒丸(・)が並ぶだけだと見分けがつかないため、
+   ラベルだけ罫線付きの小さな帯にして視覚的に一段上げる */
+.modal-content p.list-label {
+  margin: 1.3em 0 0.5em;
+  padding-left: 11px;
+  border-left: 3px solid var(--gold);
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--wine);
+  line-height: 1.4;
+}
+.modal-content p.list-label:first-child { margin-top: 0; }
+.modal-content p.list-label + ul { margin-top: 0; }
 .modal-content hr { margin: 1.8em 0; border: none; border-top: 1px solid var(--rule); }
 .modal-content table {
   width: 100%;

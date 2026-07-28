@@ -75,6 +75,46 @@ def test_md_to_html_list():
     assert html == "<ul><li>項目1</li><li>項目2</li></ul>"
 
 
+def test_list_label_colon_inside_bold():
+    assert ged.list_label("**「D」の真の意味:**") == "「D」の真の意味"
+
+
+def test_list_label_colon_outside_bold():
+    assert ged.list_label("**「D」の真の意味**:") == "「D」の真の意味"
+
+
+def test_list_label_full_width_colon():
+    assert ged.list_label("**ラベル：**") == "ラベル"
+
+
+def test_list_label_bold_without_colon_is_not_a_label():
+    # 太字だけでコロンが無い項目は、ただの強調された箇条書き項目であってラベルではない
+    assert ged.list_label("**重要な項目**") is None
+
+
+def test_list_label_plain_item_is_not_a_label():
+    assert ged.list_label("ふつうの項目") is None
+
+
+def test_md_to_html_list_with_label_becomes_label_and_ul():
+    md = "- **「D」の真の意味:**\n- ダイバーシティ（多様性）の意味を持つ\n- 差別された種族全般を指す"
+    html = ged.md_to_html(md)
+    assert html == (
+        '<p class="list-label">「D」の真の意味</p>\n'
+        "<ul><li>ダイバーシティ（多様性）の意味を持つ</li><li>差別された種族全般を指す</li></ul>"
+    )
+
+
+def test_md_to_html_list_without_label_is_unaffected():
+    html = ged.md_to_html("- 項目1\n- 項目2")
+    assert html == "<ul><li>項目1</li><li>項目2</li></ul>"
+
+
+def test_md_to_html_label_only_list_has_no_trailing_ul():
+    html = ged.md_to_html("- **単独ラベル:**")
+    assert html == '<p class="list-label">単独ラベル</p>'
+
+
 def test_md_to_html_numbered_h3_becomes_sec_num_heading():
     """新しい原稿ファイルは「1. 見出し」をプレーンテキストではなく
     Markdown見出し(### 1. 見出し)で書くようになった。既存記事の

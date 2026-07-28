@@ -45,6 +45,27 @@ def inline(text: str) -> str:
     return text
 
 
+# 「* **ラベル:**」「* **ラベル**:」のように、箇条書きの先頭行だけが
+# 太字＋コロンで、後続の行がその詳細説明になっているグループを検出する。
+# コロンは太字の内側/外側どちらに書かれることもあるため両方許可する。
+LIST_LABEL_RE = re.compile(r"^\*\*(.+?)\*\*[:：]?$")
+
+
+def list_label(raw_item: str) -> str:
+    """箇条書きの1項目がグループ見出し(ラベル)なら見出しテキストを返す。
+
+    ラベルでなければ None を返す。
+    """
+    m = LIST_LABEL_RE.match(raw_item.strip())
+    if not m:
+        return None
+    label = m.group(1)
+    has_colon = raw_item.rstrip().endswith((":", "：")) or label.endswith((":", "："))
+    if not has_colon:
+        return None
+    return label.rstrip(":：")
+
+
 def parse_table(lines: list) -> str:
     rows = [l.strip() for l in lines if l.strip().startswith("|")]
     rows = [r for r in rows if not re.fullmatch(r"\|[\s:\-|]+\|?", r)]
@@ -140,9 +161,15 @@ def md_to_html(md: str) -> str:
     list_buf: list = []
 
     def flush_list():
-        if list_buf:
-            out.append("<ul>" + "".join(f"<li>{inline(x)}</li>" for x in list_buf) + "</ul>")
-            list_buf.clear()
+        if not list_buf:
+            return
+        label = list_label(list_buf[0])
+        rest = list_buf[1:] if label is not None else list_buf
+        if label is not None:
+            out.append(f'<p class="list-label">{inline(label)}</p>')
+        if rest:
+            out.append("<ul>" + "".join(f"<li>{inline(x)}</li>" for x in rest) + "</ul>")
+        list_buf.clear()
 
     while i < len(lines):
         line = lines[i].rstrip()
