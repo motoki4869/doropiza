@@ -49,6 +49,37 @@ def test_make_entry_id_pads_index():
     assert ged.make_entry_id("ドロピザ考察001-030", 12) == "001-030_012"
 
 
+def test_inline_bold():
+    assert ged.inline("**強調**テキスト") == "<strong>強調</strong>テキスト"
+
+
+def test_md_to_html_single_paragraph():
+    assert ged.md_to_html("ただの文章です。") == "<p>ただの文章です。</p>"
+
+
+def test_md_to_html_multiple_paragraphs():
+    html = ged.md_to_html("段落1\n\n段落2")
+    assert html == "<p>段落1</p>\n<p>段落2</p>"
+
+
+def test_md_to_html_bold_inline():
+    html = ged.md_to_html("これは**重要**です。")
+    assert html == "<p>これは<strong>重要</strong>です。</p>"
+
+
+def test_md_to_html_list():
+    html = ged.md_to_html("- 項目1\n- 項目2")
+    assert html == "<ul><li>項目1</li><li>項目2</li></ul>"
+
+
+def test_md_to_html_table():
+    md = "| a | b |\n|---|---|\n| 1 | 2 |"
+    html = ged.md_to_html(md)
+    assert '<table class="rpt-table">' in html
+    assert "<th>a</th>" in html
+    assert "<td>1</td>" in html
+
+
 def run():
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]
     for t in tests:
