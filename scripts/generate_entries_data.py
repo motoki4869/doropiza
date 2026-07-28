@@ -61,6 +61,37 @@ def parse_table(lines: list) -> str:
     return "".join(out)
 
 
+def plain_block_to_html(stripped: str) -> str:
+    """Markdown記法を持たない1行を、内容から構造を推定してHTML化する。
+
+    ドロピザの本文はMarkdown記法をほとんど使わず、
+    「概要」「1. 見出し」「ラベル: 本文」といった書式を
+    プレーンテキストで表現している。そのまま<p>にすると
+    全てが同じ見た目の段落になり読みづらいため、
+    ここで見出し・ラベル付き項目を判別して意味的なタグを付ける。
+    """
+    # 「1. 最終章へのカウントダウン」のような番号付き見出し
+    m = re.match(r"^(\d+)[.．]\s*(.+)$", stripped)
+    if m and "。" not in stripped and len(stripped) < 60:
+        return f'<h4 class="sec-num"><span class="num">{inline(m.group(1))}</span>{inline(m.group(2))}</h4>'
+
+    # 「名前の由来:」のように行末がコロンで終わる小見出し
+    m = re.match(r"^([^:：]{2,30})[:：]$", stripped)
+    if m:
+        return f'<h4 class="sec-sub">{inline(m.group(1))}</h4>'
+
+    # 「物語の終焉に向けたペース: 尾田先生は〜」のようなラベル付き項目
+    m = re.match(r"^([^:：]{2,30})[:：]\s*(.+)$", stripped)
+    if m and not m.group(2).startswith("//"):
+        return f'<p class="term-item"><span class="term">{inline(m.group(1))}</span>{inline(m.group(2))}</p>'
+
+    # 「概要」「この動画が伝えたかったこと」のような独立したセクション見出し
+    if len(stripped) <= 24 and "。" not in stripped and "、" not in stripped:
+        return f'<h3 class="sec">{inline(stripped)}</h3>'
+
+    return f"<p>{inline(stripped)}</p>"
+
+
 def md_to_html(md: str) -> str:
     lines = md.split("\n")
     out = []
@@ -110,7 +141,7 @@ def md_to_html(md: str) -> str:
             continue
 
         flush_list()
-        out.append(f"<p>{inline(stripped)}</p>")
+        out.append(plain_block_to_html(stripped))
         i += 1
 
     flush_list()

@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <title>ドロピザ考察アーカイブ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ドロピザのONE PIECE考察約210本をフリーワード検索・タグ絞り込みで探せる自分用アーカイブ。">
+<meta name="description" content="ドロピザのONE PIECE考察214本をフリーワード検索・タグ絞り込みで探せる自分用アーカイブ。">
+<meta name="theme-color" content="#e2cd9c">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -12,29 +13,54 @@
 </head>
 <body>
 <header class="site-header">
-  <img src="images/doropiza.png" alt="ドロピザ" class="logo">
-  <div class="header-text">
-    <h1>ドロピザ考察アーカイブ</h1>
+  <div class="wrap header-inner">
+    <img src="images/doropiza.png" alt="ドロピザ" class="logo">
+    <div class="header-text">
+      <h1>ドロピザ考察アーカイブ</h1>
+      <p class="tagline">ONE PIECE考察の記録庫</p>
+    </div>
     <p id="entry-count" class="entry-count"></p>
   </div>
 </header>
-<main>
-  <div class="controls">
-    <input id="search" type="search" class="search-input" placeholder="キーワードで検索（例: イム様）">
-    <div id="tag-filters" class="tag-filters"></div>
+
+<div class="controls-bar">
+  <div class="wrap controls">
+    <div class="search-wrap">
+      <input id="search" type="search" class="search-input" placeholder="キーワードで検索（例: イム様）" autocomplete="off">
+    </div>
+    <div class="tag-filter-area">
+      <div id="tag-filters" class="tag-filters"></div>
+      <div class="tag-actions">
+        <button type="button" id="tag-toggle" class="link-btn" aria-expanded="false">タグをすべて表示</button>
+        <button type="button" id="tag-clear" class="link-btn" hidden>絞り込みを解除</button>
+      </div>
+    </div>
   </div>
+</div>
+
+<main class="wrap">
   <div id="card-grid" class="card-grid"></div>
+  <div id="empty-state" class="empty-state" hidden>
+    <p class="empty-mark">⚓</p>
+    <p class="empty-title">該当する考察が見つかりません</p>
+    <p class="empty-hint">キーワードを短くするか、タグの絞り込みを解除してみてください。</p>
+  </div>
 </main>
-<div id="modal" class="modal" hidden>
+
+<div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal-backdrop"></div>
-  <div class="modal-body">
+  <div class="modal-body" tabindex="-1">
     <button id="modal-close" class="modal-close" aria-label="閉じる">×</button>
-    <div id="modal-number" class="modal-number"></div>
-    <h2 id="modal-title"></h2>
-    <div id="modal-tags" class="tags"></div>
+    <div class="modal-head">
+      <div id="modal-number" class="modal-number"></div>
+      <h2 id="modal-title"></h2>
+      <div id="modal-tags" class="tags"></div>
+      <div id="modal-source" class="modal-source"></div>
+    </div>
     <div id="modal-content" class="modal-content"></div>
   </div>
 </div>
+
 <script src="data/entries-data.js"></script>
 <script src="app.js"></script>
 </body>

@@ -61,8 +61,8 @@ def test_md_to_html_single_paragraph():
 
 
 def test_md_to_html_multiple_paragraphs():
-    html = ged.md_to_html("段落1\n\n段落2")
-    assert html == "<p>段落1</p>\n<p>段落2</p>"
+    html = ged.md_to_html("これは最初の段落です。\n\nこれは次の段落です。")
+    assert html == "<p>これは最初の段落です。</p>\n<p>これは次の段落です。</p>"
 
 
 def test_md_to_html_bold_inline():
@@ -231,6 +231,65 @@ def test_main_handles_no_md_files():
 
         content = out_file.read_text(encoding="utf-8")
         assert "window.ENTRIES = []" in content
+
+
+def test_plain_block_numbered_line_becomes_section_heading():
+    html = ged.plain_block_to_html("1. 最終章へのカウントダウンとワノ国後の展開")
+    assert html == (
+        '<h4 class="sec-num"><span class="num">1</span>'
+        "最終章へのカウントダウンとワノ国後の展開</h4>"
+    )
+
+
+def test_plain_block_numbered_sentence_stays_paragraph():
+    # 句点を含む長い文は見出しではなく本文として扱う
+    line = "1. これは実際には本文であり、句点を含むため見出しではありません。"
+    assert ged.plain_block_to_html(line) == f"<p>{line}</p>"
+
+
+def test_plain_block_labeled_line_becomes_term_item():
+    html = ged.plain_block_to_html("物語の終焉に向けたペース: 尾田先生は2019年時点で言及した。")
+    assert html == (
+        '<p class="term-item"><span class="term">物語の終焉に向けたペース</span>'
+        "尾田先生は2019年時点で言及した。</p>"
+    )
+
+
+def test_plain_block_full_width_colon_is_supported():
+    html = ged.plain_block_to_html("捕縛のタイミング：カイドウを倒した後に消耗する。")
+    assert '<span class="term">捕縛のタイミング</span>' in html
+
+
+def test_plain_block_trailing_colon_becomes_subheading():
+    assert ged.plain_block_to_html("名前の由来:") == '<h4 class="sec-sub">名前の由来</h4>'
+
+
+def test_plain_block_short_standalone_line_becomes_section():
+    assert ged.plain_block_to_html("この動画が伝えたかったこと") == (
+        '<h3 class="sec">この動画が伝えたかったこと</h3>'
+    )
+
+
+def test_plain_block_normal_sentence_stays_paragraph():
+    line = "本動画は、人気漫画『ONE PIECE』のワノ国編終了後の展開を考察する内容です。"
+    assert ged.plain_block_to_html(line) == f"<p>{line}</p>"
+
+
+def test_plain_block_url_is_not_treated_as_label():
+    line = "詳しくは https://example.com/page を参照してください。"
+    assert ged.plain_block_to_html(line) == f"<p>{line}</p>"
+
+
+def test_plain_block_preserves_inline_bold():
+    html = ged.plain_block_to_html("結論: **ルフィ**が鍵を握る。")
+    assert "<strong>ルフィ</strong>" in html
+
+
+def test_md_to_html_applies_plain_block_structure():
+    html = ged.md_to_html("概要\n本動画は考察を行う内容です。\n\n1. 最初の論点")
+    assert '<h3 class="sec">概要</h3>' in html
+    assert "<p>本動画は考察を行う内容です。</p>" in html
+    assert '<h4 class="sec-num">' in html
 
 
 def run():
