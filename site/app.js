@@ -1,6 +1,8 @@
 (function () {
   const grid = document.getElementById("card-grid");
   const countEl = document.getElementById("entry-count");
+  const searchInput = document.getElementById("search");
+  const tagFilters = document.getElementById("tag-filters");
   const entries = window.ENTRIES || [];
 
   const modal = document.getElementById("modal");
@@ -11,6 +13,8 @@
   const modalTags = document.getElementById("modal-tags");
   const modalContent = document.getElementById("modal-content");
 
+  const state = { query: "", activeTags: new Set() };
+
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -18,6 +22,25 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  const searchText = new Map(
+    entries.map((e) => [e.id, `${e.title} ${e.html.replace(/<[^>]*>/g, " ")}`])
+  );
+
+  function allTags() {
+    const set = new Set();
+    entries.forEach((e) => e.tags.forEach((t) => set.add(t)));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ja"));
+  }
+
+  function filteredEntries() {
+    return entries.filter((e) => {
+      const matchesQuery = !state.query || searchText.get(e.id).includes(state.query);
+      const matchesTags =
+        state.activeTags.size === 0 || Array.from(state.activeTags).every((t) => e.tags.includes(t));
+      return matchesQuery && matchesTags;
+    });
   }
 
   function renderCards(list) {
@@ -32,6 +55,20 @@
       </div>`
       )
       .join("");
+  }
+
+  function renderTagFilters() {
+    tagFilters.innerHTML = allTags()
+      .map(
+        (t) => `<button type="button" class="tag-filter-chip${state.activeTags.has(t) ? " active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+      )
+      .join("");
+  }
+
+  function update() {
+    const list = filteredEntries();
+    countEl.textContent = `全${entries.length}件中 ${list.length}件表示`;
+    renderCards(list);
   }
 
   function openModal(id) {
@@ -50,6 +87,24 @@
     modal.setAttribute("hidden", "");
     document.body.style.overflow = "";
   }
+
+  searchInput.addEventListener("input", (e) => {
+    state.query = e.target.value.trim();
+    update();
+  });
+
+  tagFilters.addEventListener("click", (e) => {
+    const chip = e.target.closest(".tag-filter-chip");
+    if (!chip) return;
+    const tag = chip.dataset.tag;
+    if (state.activeTags.has(tag)) {
+      state.activeTags.delete(tag);
+    } else {
+      state.activeTags.add(tag);
+    }
+    renderTagFilters();
+    update();
+  });
 
   grid.addEventListener("click", (e) => {
     const card = e.target.closest(".entry-card");
@@ -70,6 +125,6 @@
     if (e.key === "Escape" && !modal.hasAttribute("hidden")) closeModal();
   });
 
-  countEl.textContent = `全${entries.length}件`;
-  renderCards(entries);
+  renderTagFilters();
+  update();
 })();

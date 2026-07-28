@@ -114,3 +114,27 @@ main { padding: 20px 24px 60px; }
 #modal-title { margin: 0 0 10px; color: var(--wine); }
 .modal-content { line-height: 1.9; }
 .modal-content p { margin: 0 0 1em; }
+.controls { margin-bottom: 18px; }
+.search-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: rgba(255, 250, 235, 0.85);
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.search-input:focus { outline: 2px solid var(--wine); outline-offset: 1px; }
+.tag-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-filter-chip {
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--sea);
+  background: transparent;
+  color: var(--sea);
+  cursor: pointer;
+}
+.tag-filter-chip.active { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 700; }
