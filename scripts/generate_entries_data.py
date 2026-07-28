@@ -2,8 +2,10 @@
 """ドロピザ考察*.md を全件パースし、site/data/entries-data.js を再生成する。
 考察を追記した際は、このスクリプトを再実行してentries-data.jsをコミットし直す想定。
 """
+import fnmatch
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -124,3 +126,54 @@ def load_tags(tags_path: Path) -> dict:
 def match_tags(text: str, tags_dict: dict) -> list:
     matched = [name for name, keywords in tags_dict.items() if any(kw in text for kw in keywords)]
     return matched if matched else ["未分類"]
+
+
+def find_md_files(repo_root: Path) -> list:
+    # macOSのファイルシステムはファイル名をNFD（濁点等が分解された形）で
+    # 保持することがあり、ソースコード中のNFCなグロブパターンでは
+    # 一部のファイルがマッチしないことがある。ここではファイル名を
+    # NFCに正規化してから比較することで、オンディスクの正規化形式に
+    # 依存せず確実に全ファイルを検出する。
+    pattern = unicodedata.normalize("NFC", MD_GLOB)
+    matched = [
+        p for p in repo_root.iterdir()
+        if p.is_file() and fnmatch.fnmatch(unicodedata.normalize("NFC", p.name), pattern)
+    ]
+    return sorted(matched, key=lambda p: unicodedata.normalize("NFC", p.name))
+
+
+def build_entries(file_paths: list, tags_dict: dict) -> list:
+    entries = []
+    for file_path in file_paths:
+        text = file_path.read_text(encoding="utf-8")
+        for idx, (heading, body) in enumerate(split_entries(text), start=1):
+            if not body.strip():
+                print(f"WARNING: 本文が空のためスキップ: {file_path.name} - {heading}")
+                continue
+            number, title = parse_heading(heading)
+            entries.append({
+                "id": make_entry_id(file_path.stem, idx),
+                "number": number,
+                "title": title,
+                "sourceFile": file_path.name,
+                "tags": match_tags(f"{heading}\n{body}", tags_dict),
+                "html": md_to_html(body),
+            })
+    return entries
+
+
+def write_entries_js(entries: list, out_path: Path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    js = "window.ENTRIES = " + json.dumps(entries, ensure_ascii=False, indent=2) + ";\n"
+    out_path.write_text(js, encoding="utf-8")
+
+
+def main():
+    tags_dict = load_tags(TAGS_FILE)
+    entries = build_entries(find_md_files(REPO_ROOT), tags_dict)
+    write_entries_js(entries, OUT_FILE)
+    print(f"generated {OUT_FILE} ({len(entries)} entries)")
+
+
+if __name__ == "__main__":
+    main()
