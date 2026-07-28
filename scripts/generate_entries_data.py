@@ -171,8 +171,23 @@ def md_to_html(md: str) -> str:
         m = re.match(r"^(#{1,4})\s+(.*)$", stripped)
         if m:
             flush_list()
-            level = 2 if len(m.group(1)) == 1 else min(len(m.group(1)) + 1, 4)
-            out.append(f"<h{level}>{inline(m.group(2))}</h{level}>")
+            hashes, text = len(m.group(1)), m.group(2)
+            if hashes == 3:
+                # 「### 1. タイトル」は既存記事の「1. タイトル」(プレーンテキスト)と
+                # 同じ丸数字バッジ見出しに、番号なしなら独立見出し(概要等)に揃える
+                num_m = re.match(r"^(\d+)[.．]\s*(.+)$", text)
+                if num_m:
+                    out.append(
+                        f'<h4 class="sec-num"><span class="num">{inline(num_m.group(1))}</span>{inline(num_m.group(2))}</h4>'
+                    )
+                else:
+                    out.append(f'<h3 class="sec">{inline(text)}</h3>')
+            elif hashes == 4:
+                # 「#### 小見出し」は既存記事の「小見出し:」と同じ扱いに揃える
+                out.append(f'<h4 class="sec-sub">{inline(text)}</h4>')
+            else:
+                level = 2 if hashes == 1 else min(hashes + 1, 4)
+                out.append(f"<h{level}>{inline(text)}</h{level}>")
             i += 1
             continue
 

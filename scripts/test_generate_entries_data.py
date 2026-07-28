@@ -75,6 +75,24 @@ def test_md_to_html_list():
     assert html == "<ul><li>項目1</li><li>項目2</li></ul>"
 
 
+def test_md_to_html_numbered_h3_becomes_sec_num_heading():
+    """新しい原稿ファイルは「1. 見出し」をプレーンテキストではなく
+    Markdown見出し(### 1. 見出し)で書くようになった。既存記事の
+    番号付き見出しと同じ丸数字バッジのスタイルに揃える。"""
+    html = ged.md_to_html("### 1. 導入部分")
+    assert html == '<h4 class="sec-num"><span class="num">1</span>導入部分</h4>'
+
+
+def test_md_to_html_non_numbered_h3_becomes_sec_heading():
+    html = ged.md_to_html("### この動画が伝えたかったこと")
+    assert html == '<h3 class="sec">この動画が伝えたかったこと</h3>'
+
+
+def test_md_to_html_h4_becomes_sec_sub_heading():
+    html = ged.md_to_html("#### 人工の森とレッドラインの真実")
+    assert html == '<h4 class="sec-sub">人工の森とレッドラインの真実</h4>'
+
+
 def test_md_to_html_table():
     md = "| a | b |\n|---|---|\n| 1 | 2 |"
     html = ged.md_to_html(md)
