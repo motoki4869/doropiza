@@ -145,6 +145,16 @@ def plain_block_to_html(stripped: str) -> str:
     if m and "。" not in masked and len(masked) < 60:
         return f'<h4 class="sec-num"><span class="num">{emit(m.group(1))}</span>{emit(m.group(2))}{timestamp}</h4>'
 
+    # 「(1) ヒトヒトの実＝…」のような、番号付き見出しの一段下の小見出し。
+    # 長さやコロンの有無だけで判定すると、同じ役割の行が段落になったり
+    # h3.secになったりしてバラけるので、括弧付き番号を明示的に拾う。
+    m = re.match(r"^[(（](\d+)[)）]\s*(.+)$", masked)
+    if m and "。" not in masked and len(masked) < 70:
+        return (
+            f'<h4 class="sec-paren"><span class="pnum">{emit(m.group(1))}</span>'
+            f"{emit(m.group(2))}{timestamp}</h4>"
+        )
+
     # 「名前の由来:」のように行末がコロンで終わる小見出し
     m = re.match(r"^([^:：]{2,30})[:：]$", masked)
     if m:

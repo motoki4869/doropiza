@@ -418,6 +418,43 @@ def test_plain_block_numbered_sentence_stays_paragraph():
     assert ged.plain_block_to_html(line) == f"<p>{line}</p>"
 
 
+def test_plain_block_paren_numbered_line_becomes_sec_paren():
+    """「(1) …」は番号付き見出しの一段下の小見出しとして扱う。
+
+    長さだけで判定していたとき、同じ役割の行が段落・h3.sec・term-itemの
+    3通りにバラけ、一部だけが赤い太字になっていた回帰がある。
+    """
+    html = ged.plain_block_to_html("(1) ヒトヒトの実＝「悪魔化を解く（人へと戻す）力」")
+    assert html == (
+        '<h4 class="sec-paren"><span class="pnum">1</span>'
+        "ヒトヒトの実＝「悪魔化を解く（人へと戻す）力」</h4>"
+    )
+
+
+def test_plain_block_short_paren_line_is_not_a_plain_section():
+    # 短くてもh3.sec(赤太字)ではなく、他の(N)行と同じ見出しになること
+    html = ged.plain_block_to_html("(1) ポーネグリフ散布の手段")
+    assert 'class="sec-paren"' in html
+    assert 'class="sec"' not in html
+
+
+def test_plain_block_paren_line_with_colon_is_not_a_term_item():
+    # コロンを含む(N)行がterm-itemに化けていた回帰
+    html = ged.plain_block_to_html("(2) イム様の性別：アダムとイブの融合（両性共有・超越的存在）")
+    assert 'class="sec-paren"' in html
+    assert 'class="term"' not in html
+
+
+def test_plain_block_full_width_paren_number_is_supported():
+    assert 'class="sec-paren"' in ged.plain_block_to_html("（3）月とルナリア族の真実")
+
+
+def test_plain_block_paren_sentence_stays_paragraph():
+    # 句点を含む本文は、括弧付き番号で始まっていても見出しにしない
+    line = "(1) この行は本文であり、句点を含むため見出しではありません。"
+    assert ged.plain_block_to_html(line) == f"<p>{line}</p>"
+
+
 def test_plain_block_labeled_line_becomes_term_item():
     html = ged.plain_block_to_html("物語の終焉に向けたペース: 尾田先生は2019年時点で言及した。")
     assert html == (

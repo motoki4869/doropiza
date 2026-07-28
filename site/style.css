@@ -461,6 +461,35 @@ main { padding-top: 26px; padding-bottom: 72px; }
   line-height: 1.5;
 }
 
+/* 「(1) …」の小見出し。丸数字バッジの見出し(sec-num)の一段下にあたる。
+   番号を角の丸い枠に入れて上の階層の丸バッジと形で描き分け、
+   破線の罫線で下のラベル帯(list-label)より一段上だと分かるようにする */
+.modal-content h4.sec-paren {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 1.9em 0 0.85em;
+  padding-bottom: 6px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: var(--yellow-sub);
+  border-bottom: 1px dashed rgba(201, 150, 44, 0.5);
+  line-height: 1.5;
+}
+.modal-content h4.sec-paren .pnum {
+  flex: 0 0 auto;
+  min-width: 21px;
+  padding: 2px 5px;
+  border: 1px solid rgba(201, 150, 44, 0.5);
+  border-radius: 4px;
+  background: rgba(201, 150, 44, 0.14);
+  color: var(--gold-deep);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 /* 動画内の再生位置。本文の可読性を邪魔しないよう小さく淡く添える */
 .modal-content .ts {
   margin-left: 0.5em;
