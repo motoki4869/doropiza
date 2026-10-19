@@ -17,6 +17,39 @@
   --font-display: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", serif;
   --font-ui: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
   --wrap: 1240px;
+  /* 紙のハイライトや半透明の重ねに使うRGB値 */
+  --hi: 255, 252, 240;
+  --hi-white: 255, 255, 255;
+  --sea-rgb: 43, 90, 99;
+  --bar-bg: rgba(240, 224, 189, 0.92);
+  --on-accent: #fdf6e3;
+}
+
+/* 夜は羊皮紙を灯りの落ちた革の色に。朱と青は暗い背景で読めるよう明るくする */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --parchment: #221a11;
+    --parchment-dark: #15100a;
+    --paper: #2c2318;
+    --ink: #ece1ca;
+    --ink-soft: rgba(236, 225, 202, 0.7);
+    --ink-faint: rgba(236, 225, 202, 0.42);
+    --gold: #c9962c;
+    --gold-deep: #dcae4c;
+    --yellow-sub: #d6ab42;
+    --wine: #dc8590;
+    --sea: #88bac2;
+    --rule: rgba(201, 150, 44, 0.32);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.35), 0 10px 24px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.6);
+    --hi: 74, 58, 38;
+    --hi-white: 82, 66, 44;
+    --sea-rgb: 136, 186, 194;
+    --bar-bg: rgba(34, 26, 17, 0.92);
+    --on-accent: #1d160e;
+    color-scheme: dark;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -30,9 +63,9 @@ body {
   background-color: var(--parchment);
   background-image:
     /* 羊皮紙の繊維感。縞に見えないよう、周期を長く・濃度を薄くしている */
-    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.06) 0 3px, transparent 3px 11px),
+    repeating-linear-gradient(92deg, rgba(var(--hi-white), 0.06) 0 3px, transparent 3px 11px),
     repeating-linear-gradient(2deg, rgba(150, 106, 40, 0.02) 0 4px, transparent 4px 13px),
-    radial-gradient(ellipse at 18% -5%, rgba(255, 252, 240, 0.75), transparent 55%),
+    radial-gradient(ellipse at 18% -5%, rgba(var(--hi), 0.75), transparent 55%),
     radial-gradient(ellipse at 85% 8%, rgba(201, 150, 44, 0.16), transparent 45%),
     radial-gradient(ellipse at 50% 110%, rgba(122, 31, 43, 0.12), transparent 60%),
     linear-gradient(165deg, var(--parchment) 0%, var(--parchment-dark) 100%);
@@ -45,7 +78,7 @@ body {
 /* ---------- ヘッダー ---------- */
 .site-header {
   border-bottom: 1px solid var(--rule);
-  background: linear-gradient(180deg, rgba(255, 252, 240, 0.55), rgba(255, 252, 240, 0));
+  background: linear-gradient(180deg, rgba(var(--hi), 0.55), rgba(var(--hi), 0));
 }
 .header-inner {
   display: flex;
@@ -70,7 +103,7 @@ body {
   font-weight: 600;
   color: var(--wine);
   letter-spacing: 0.06em;
-  text-shadow: 0 1px 0 rgba(255, 253, 245, 0.8);
+  text-shadow: 0 1px 0 rgba(var(--hi), 0.8);
 }
 .tagline {
   margin: 4px 0 0;
@@ -89,7 +122,7 @@ body {
   padding: 6px 12px;
   border: 1px solid var(--rule);
   border-radius: 999px;
-  background: rgba(255, 252, 240, 0.6);
+  background: rgba(var(--hi), 0.6);
 }
 
 /* ---------- 検索・タグ絞り込み ---------- */
@@ -97,7 +130,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(240, 224, 189, 0.92);
+  background: var(--bar-bg);
   backdrop-filter: saturate(1.3) blur(8px);
   -webkit-backdrop-filter: saturate(1.3) blur(8px);
   border-bottom: 1px solid var(--rule);
@@ -172,25 +205,25 @@ body {
   line-height: 1;
   padding: 6px 13px;
   border-radius: 999px;
-  border: 1px solid rgba(43, 90, 99, 0.5);
-  background: rgba(255, 252, 240, 0.55);
+  border: 1px solid rgba(var(--sea-rgb), 0.5);
+  background: rgba(var(--hi), 0.55);
   color: var(--sea);
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
 }
-.tag-filter-chip:hover { background: rgba(43, 90, 99, 0.12); }
+.tag-filter-chip:hover { background: rgba(var(--sea-rgb), 0.12); }
 .tag-filter-chip:active { transform: translateY(1px); }
 .tag-filter-chip.active {
   background: var(--sea);
   border-color: var(--sea);
-  color: #fdf6e3;
+  color: var(--on-accent);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
 }
 .tag-actions { display: flex; gap: 16px; margin-top: 9px; }
 .link-btn {
   font-family: var(--font-ui);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--gold-deep);
   background: none;
   border: none;
@@ -215,7 +248,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   height: 100%;
   padding: 18px 18px 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, rgba(var(--hi-white), 0.5), rgba(var(--hi-white), 0) 40%),
     var(--paper);
   border: 1px solid var(--rule);
   border-radius: 5px;
@@ -253,13 +286,13 @@ main { padding-top: 26px; padding-bottom: 72px; }
   height: 38px;
   padding: 0 6px;
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #9c2c39, var(--wine) 62%, #5d141d);
+  background: radial-gradient(circle at 34% 30%, #9c2c39, #7a1f2b 62%, #5d141d);
   color: #f4e3c4;
   font-family: var(--font-ui);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 2px 4px rgba(59, 38, 12, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 4px rgba(59, 38, 12, 0.3), inset 0 1px 1px rgba(var(--hi-white), 0.25);
 }
 .entry-card h2 {
   margin: 0 0 9px;
@@ -292,18 +325,18 @@ main { padding-top: 26px; padding-bottom: 72px; }
 .entry-card .tags { margin-bottom: 12px; }
 .tag {
   font-family: var(--font-ui);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1;
   padding: 4px 9px;
   border-radius: 3px;
-  background: rgba(43, 90, 99, 0.1);
-  border: 1px solid rgba(43, 90, 99, 0.28);
+  background: rgba(var(--sea-rgb), 0.1);
+  border: 1px solid rgba(var(--sea-rgb), 0.28);
   color: var(--sea);
   white-space: nowrap;
 }
 .tag-more {
   font-family: var(--font-ui);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1;
   padding: 4px 7px;
   color: var(--ink-faint);
@@ -314,7 +347,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   padding-top: 10px;
   border-top: 1px dashed rgba(165, 118, 27, 0.3);
   font-family: var(--font-ui);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--ink-faint);
   letter-spacing: 0.02em;
 }
@@ -344,7 +377,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   overflow-y: auto;
   overscroll-behavior: contain;
   background:
-    radial-gradient(ellipse at 10% 0%, rgba(255, 255, 255, 0.65), transparent 45%),
+    radial-gradient(ellipse at 10% 0%, rgba(var(--hi-white), 0.65), transparent 45%),
     var(--paper);
   border: 1px solid var(--gold);
   border-radius: 7px;
@@ -390,9 +423,9 @@ main { padding-top: 26px; padding-bottom: 72px; }
   margin-bottom: 10px;
   border-radius: 999px;
   background: var(--wine);
-  color: #f4e3c4;
+  color: var(--on-accent);
   font-family: var(--font-ui);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
@@ -406,7 +439,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
 .modal-source {
   margin-top: 10px;
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--ink-faint);
 }
 
@@ -436,7 +469,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   font-size: 1rem;
   font-weight: 600;
   color: var(--sea);
-  border-bottom: 1px solid rgba(43, 90, 99, 0.24);
+  border-bottom: 1px solid rgba(var(--sea-rgb), 0.24);
   line-height: 1.5;
 }
 .modal-content h4.sec-num .num {
@@ -448,9 +481,9 @@ main { padding-top: 26px; padding-bottom: 72px; }
   height: 23px;
   border-radius: 50%;
   background: var(--sea);
-  color: #fdf6e3;
+  color: var(--on-accent);
   font-family: var(--font-ui);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 .modal-content h4.sec-sub {
@@ -485,7 +518,7 @@ main { padding-top: 26px; padding-bottom: 72px; }
   background: rgba(201, 150, 44, 0.14);
   color: var(--gold-deep);
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
 }
