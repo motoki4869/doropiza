@@ -129,7 +129,43 @@
     modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
     modalBodyEl.scrollTop = 0;
+    highlightMatches(modalTitle, state.query);
+    const hits = highlightMatches(modalContent, state.query);
+    // 本文に該当があれば、最初の箇所が画面の上から1/3あたりに来るまで送る
+    if (hits.length > 0) {
+      const bodyRect = modalBodyEl.getBoundingClientRect();
+      const hitRect = hits[0].getBoundingClientRect();
+      modalBodyEl.scrollTop += hitRect.top - bodyRect.top - modalBodyEl.clientHeight / 3;
+    }
     modalBodyEl.focus();
+  }
+
+  // 検索語を蛍光ペン風に囲む。テキストノード単位で置き換えるので、
+  // 本文の見出しや強調などのタグ構造は壊さない。
+  function highlightMatches(root, query) {
+    if (!query) return [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) {
+      if (walker.currentNode.nodeValue.includes(query)) nodes.push(walker.currentNode);
+    }
+    const marks = [];
+    nodes.forEach((node) => {
+      const parts = node.nodeValue.split(query);
+      const frag = document.createDocumentFragment();
+      parts.forEach((part, i) => {
+        if (i > 0) {
+          const mark = document.createElement("mark");
+          mark.className = "search-hit";
+          mark.textContent = query;
+          frag.appendChild(mark);
+          marks.push(mark);
+        }
+        if (part) frag.appendChild(document.createTextNode(part));
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+    return marks;
   }
 
   function closeModal() {

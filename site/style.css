@@ -23,6 +23,9 @@
   --sea-rgb: 43, 90, 99;
   --bar-bg: rgba(240, 224, 189, 0.92);
   --on-accent: #fdf6e3;
+  --marker: rgba(255, 214, 0, 0.7);
+  --marker-ink: inherit;
+  --marker-from: 35%;
 }
 
 /* 夜は羊皮紙を灯りの落ちた革の色に。朱と青は暗い背景で読めるよう明るくする */
@@ -48,6 +51,10 @@
     --sea-rgb: 136, 186, 194;
     --bar-bg: rgba(34, 26, 17, 0.92);
     --on-accent: #1d160e;
+    /* 暗い背景では半透明の黄色が沈むため、明るい黄色で文字ごと塗り、文字色を濃くする */
+    --marker: #f2cf3d;
+    --marker-ink: #1d160e;
+    --marker-from: 0%;
     color-scheme: dark;
   }
 }
@@ -622,4 +629,12 @@ main { padding-top: 26px; padding-bottom: 72px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* 検索語の蛍光ペン。ライトでは下側だけ塗って、手でなぞったような見た目にする */
+.search-hit {
+  color: var(--marker-ink);
+  background: linear-gradient(transparent var(--marker-from), var(--marker) var(--marker-from), var(--marker) 92%, transparent 92%);
+  border-radius: 2px;
+  padding: 0 1px;
 }
