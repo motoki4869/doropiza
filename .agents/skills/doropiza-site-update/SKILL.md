@@ -100,3 +100,7 @@ curl -s https://doropiza.vercel.app/ | grep -o "考察[0-9]*本"
 ## 表示を直したくなったら
 
 データではなく見た目の話（カードの並び、モーダル、検索・タグ絞り込み）は `site/style.css` と `site/app.js` を直接編集する。この場合も反映は同じで、push すれば自動デプロイされる。モバイル幅の確認は Playwright で 390px 前後にリサイズして見るのが早い。
+
+## 評価
+
+合格基準・テストケース・過去の失敗はこのリポジトリの`.agents/evaluation/doropiza-site-update.md`にある。このスキルを直す前に読み、失敗が起きたら先にそこへケースを足す。
