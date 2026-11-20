@@ -9,6 +9,7 @@ doropizaの変更履歴。新しい日付を上に追記する。
 - **変更**: スキルの合格基準・テストケース・過去の失敗を`.agents/evaluation/`に分け、SKILL.mdの末尾からそこを参照するようにした。 2026-07-28のindex.html書き潰し事故をケースとして記録した。
 - **理由**: スキルは使い捨ての派生物で、残すべき資産は素材と評価だという方針（`~/.agents/docs/skills_policy.md`）に合わせ、モデルやスキルが変わっても合格基準と過去の失敗が失われないようにするため。
 - **対象**: `.agents/skills/doropiza-site-update/SKILL.md`, `.agents/evaluation/doropiza-site-update.md`
+- **commit**: `7fc88eb`
 
 ## 2026-10-26
 
